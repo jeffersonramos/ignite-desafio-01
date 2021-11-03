@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Alert } from 'react-native';
 
 import { Header } from '../components/Header';
 import { Task, TasksList } from '../components/TasksList';
@@ -8,7 +8,38 @@ import { TodoInput } from '../components/TodoInput';
 export function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
 
+  function showAlertSameTitle() {
+    Alert.alert(
+      "Task já cadastrada",
+      "Você não pode cadastrar uma task com o mesmo nome."
+    );
+  }
+
+  function showAlertConfirmDelete(removeItem: Task) {
+    Alert.alert(
+      "Remover Task",
+      "Tem certeza que deseja remover esse item?",
+      [
+        {
+          text: "Não"
+        },
+        {
+          text: "Sim",
+          onPress: () => setTasks(tasks.filter(task => task.id !== removeItem.id))
+        }
+      ]
+    );
+  }
+
   function handleAddTask(newTaskTitle: string) {
+
+    let foundTitle = tasks.find(item => item.title === newTaskTitle);
+
+    if(foundTitle) {
+      showAlertSameTitle();
+      return;
+    }
+
     let task = {
       id: new Date().getTime(),
       title: newTaskTitle,
@@ -28,8 +59,23 @@ export function Home() {
     }    
   }
 
+  function handleEditTask(id: number, taskNewTitle: string ) {
+    let updatedTasks = tasks.map(task => ({ ...task }));
+    let foundTask = updatedTasks.find(item => item.id === id);
+
+    if (foundTask) {
+      foundTask.title = taskNewTitle;
+      setTasks(updatedTasks);
+    }    
+  }
+
   function handleRemoveTask(id: number) {
-    setTasks(tasks.filter(task => task.id !== id));
+
+    let removeItem = tasks.find(task => task.id === id);
+
+    if (removeItem) {      
+      showAlertConfirmDelete(removeItem);
+    }
   }
 
   return (
@@ -42,6 +88,7 @@ export function Home() {
         tasks={tasks} 
         toggleTaskDone={handleToggleTaskDone}
         removeTask={handleRemoveTask}
+        editTask={handleEditTask}
       />
     </View>
   )
